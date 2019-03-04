@@ -1,3 +1,5 @@
+![Screenshot of the application](images/screenshot.png)
+
 # Graph Physical Models: C++/JUCE implementation
 
 This folder contains a real-time interactive C++/JUCE implementation of *graph
