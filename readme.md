@@ -1,3 +1,5 @@
+![Branching tolopogy graph physical model](images/branch.png)
+
 # Graph Physical Models
 
 This repository contains code related to the currently unreleased paper
