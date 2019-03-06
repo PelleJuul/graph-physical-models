@@ -36,11 +36,16 @@ private:
     
     Component toolMenu;
     TextButton addNodeButton;
+    TextButton addStringButton;
     TextButton connectNodeButton;
     TextButton exciteNodeButton;
 
     Component nodeInfo;
     ToggleButton dirichletButton;
+    
+    Component addStringInfo;
+    Label addStringNumNodesLabel;
+    Slider addStringNumNodesSlider;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GraphicalAudioProcessorEditor)
 };
