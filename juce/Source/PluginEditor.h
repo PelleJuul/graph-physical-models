@@ -54,6 +54,8 @@ private:
     Label boundaryConditionLabel;
     ToggleButton dirichletButton;
     ToggleButton neumannButton;
+    Label nodeOutputLabel;
+    Slider nodeOutputSlider;
     
     Component addStringInfo;
     Label addStringNumNodesLabel;

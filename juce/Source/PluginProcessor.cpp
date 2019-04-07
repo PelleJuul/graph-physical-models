@@ -200,19 +200,16 @@ void GraphicalAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuff
             node->dxxPrev = dxx;
         }
 
+        float y = 0;
+        
         for (int n = 0; n < nodes.size(); n++)
         {
-            nodes.at(n)->finishUpdate();
+            auto *node = nodes.at(n);
+            node->finishUpdate();
+            y += node->getOutputLevel() * node->value;
         }
 
-        if (nodes.size() > 0)
-        {
-            channel0[i] = nodes[0]->value;
-        }
-        else
-        {
-            channel0[i] = 0;
-        }
+        channel0[i] = y;
     }
 
     // This is the place where you'd normally do the guts of your plugin's

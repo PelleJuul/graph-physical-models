@@ -75,10 +75,23 @@ void GraphEditor::paint(Graphics &g)
         }
         else
         {
-            g.setColour(Colours::black);
+            g.setColour(Colour(0xFF282422));
         }
         
         float radius = fmin(10, fmax(0, nodeRadius + (nodeRadius / 2.0) * node->value));
+        
+        if (node->getOutputLevel() >= 0.001)
+        {
+            float outputRadius = radius * (1.0 + node->getOutputLevel());
+            g.setColour(Colour(0xFFE34234));
+            g.fillEllipse(
+                node->x - outputRadius,
+                node->y - outputRadius,
+                2.0 * outputRadius,
+                2.0 * outputRadius);
+            g.setColour(Colour(0xFF282422));
+        }
+        
         g.fillEllipse(
             node->x - radius,
             node->y - radius,

@@ -123,6 +123,22 @@ GraphicalAudioProcessorEditor::GraphicalAudioProcessorEditor (GraphicalAudioProc
         }
     };
     
+    nodeOutputLabel.setText("Ouput volume:", NotificationType::dontSendNotification);
+    nodeInfo.addAndMakeVisible(nodeOutputLabel);
+    
+    nodeOutputSlider.setSliderStyle(Slider::SliderStyle::LinearHorizontal);
+    nodeOutputSlider.setRange(0, 100);
+    nodeOutputSlider.setNumDecimalPlacesToDisplay(0);
+    nodeOutputSlider.setValue(0);
+    nodeOutputSlider.onValueChange = [&]()
+    {
+        if (graphEditor.getSelectedNode() != nullptr)
+        {
+            graphEditor.getSelectedNode()->setOutputLevel(nodeOutputSlider.getValue() / 100.0);
+        }
+    };
+    nodeInfo.addAndMakeVisible(nodeOutputSlider);
+    
     addAndMakeVisible(nodeInfo);
     nodeInfo.setVisible(false);
     
@@ -169,6 +185,7 @@ GraphicalAudioProcessorEditor::GraphicalAudioProcessorEditor (GraphicalAudioProc
     nodeB->x = nodeA->x + 50;
     nodeB->y = nodeA->y;
     nodeB->connect(nodeA);
+    nodeB->setOutputLevel(1.0);
     processor.nodes.push_back(nodeB);
     processor.nodes.push_back(nodeA);
     graphEditor.repaint();
@@ -255,6 +272,10 @@ void GraphicalAudioProcessorEditor::resized()
     dirichletButton.setBounds(x, y, infoBoxWidth, toolBoxItemHeight);
     y += dirichletButton.getHeight();
     neumannButton.setBounds(x, y, infoBoxWidth, toolBoxItemHeight);
+    y += neumannButton.getHeight() + margin;
+    nodeOutputLabel.setBounds(x, y, infoBoxWidth, toolBoxItemHeight);
+    y += nodeOutputLabel.getHeight();
+    nodeOutputSlider.setBounds(x, y, infoBoxWidth, toolBoxItemHeight);
     
     
     // ADD STRING INFO
@@ -281,5 +302,6 @@ void GraphicalAudioProcessorEditor::updateInfoBoxVisibilities()
     {
         dirichletButton.setToggleState(graphEditor.getSelectedNode()->isDirichlet, NotificationType::dontSendNotification);
         neumannButton.setToggleState(graphEditor.getSelectedNode()->isNeumann, NotificationType::dontSendNotification);
+        nodeOutputSlider.setValue(100.0 * graphEditor.getSelectedNode()->getOutputLevel());
     }
 }
