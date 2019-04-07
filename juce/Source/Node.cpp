@@ -30,6 +30,10 @@ float Node::computeDxx()
     {
         dxx = sum - 2.0 * connections.size() * value;
     }
+    else if (isNeumann)
+    {
+        dxx = 2.0 * sum - 2.0 * connections.size() * value;
+    }
     else
     {
         dxx = sum - connections.size() * value;

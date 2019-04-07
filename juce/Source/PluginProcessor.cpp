@@ -145,16 +145,36 @@ void GraphicalAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuff
         buffer.clear (i, 0, buffer.getNumSamples());
 
     auto channel0 = buffer.getWritePointer(0);
-
-    float wavespeed = 100.0;
-    float independentDampening = 0.0001;
-    float dependentDampening = 0.0001;
     
     float k = 1.0 / getSampleRate();
     float k2 = k * k;
     float h = 1.0 / 100.0;
     float rh2 = 1.0 / (h * h);
-    float wavespeed2 = wavespeed * wavespeed;
+    float wavespeed2 = referenceWavespeed * referenceWavespeed;
+    
+    MidiBuffer::Iterator iterator(midiMessages);
+    MidiMessage message;
+    int sampleNumber = midiMessages.getFirstEventTime();
+    int lastSamplerNumber = midiMessages.getLastEventTime();
+    // std::cout << model.hammerPosition0 << std::endl;
+    
+    while (iterator.getNextEvent(message, sampleNumber))
+    {
+        if (sampleNumber > lastSamplerNumber)
+            break;
+        
+        if (message.isNoteOn())
+        {
+            float c = std::pow(2, 1.0 / 12.0);
+            int note = message.getNoteNumber();
+            double freq = std::pow(c, note - 69) * 440;
+            wavespeed = freq * (referenceWavespeed / 440.0);
+            
+            auto *node = nodes.at(1);
+            node->value = 1.0;
+            node->valuePrev = 1.0;
+        }
+    }
     
     for (int i = 0; i < buffer.getNumSamples(); i++)
     {
@@ -168,13 +188,14 @@ void GraphicalAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuff
 
             float y = (1.0 / (1.0 + k * independentDampening)) *
             (
-                k2 * wavespeed2 * dxx +
+                k2 * (wavespeed * wavespeed) * dxx +
                 k * independentDampening * u1 +
                 k * 2.0 * dependentDampening * (dxx - dxx1) +
                 2.0 * u -
                 u1 +
                 k2 * node->force
             );
+            
             node->valueTemp = y;
             node->dxxPrev = dxx;
         }

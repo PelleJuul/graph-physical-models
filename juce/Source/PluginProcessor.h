@@ -58,8 +58,14 @@ public:
     //==============================================================================
     void getStateInformation (MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
+    
+    float referenceWavespeed = 100.0;
+    float wavespeed = 100.0;
+    float independentDampening = 0.001;
+    float dependentDampening = 0.001;
 
 private:
+
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GraphicalAudioProcessor)
 };

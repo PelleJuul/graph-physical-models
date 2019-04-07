@@ -12,9 +12,11 @@
 #include "Node.h"
 #include <vector>
 
-GraphEditor::GraphEditor(std::vector<Node*> *nodes)
+GraphEditor::GraphEditor(std::vector<Node*> *nodes, GraphicalAudioProcessor *processor)
 {
     this->nodes = nodes;
+    this->processor = processor;
+    currentMode = GraphEditorMode::None;
     setWantsKeyboardFocus(true);
     startTimerHz(30);
 }
@@ -67,12 +69,16 @@ void GraphEditor::paint(Graphics &g)
         {
             g.setColour(Colours::orange);
         }
+        else if (node->isNeumann)
+        {
+            g.setColour(Colours::green);
+        }
         else
         {
             g.setColour(Colours::black);
         }
         
-        float radius = fmax(0, nodeRadius + (nodeRadius / 2.0) * node->value);
+        float radius = fmin(10, fmax(0, nodeRadius + (nodeRadius / 2.0) * node->value));
         g.fillEllipse(
             node->x - radius,
             node->y - radius,
@@ -190,23 +196,7 @@ bool GraphEditor::keyStateChanged (bool isDown)
 {
     if (KeyPress::isKeyCurrentlyDown(KeyPress::escapeKey))
     {
-        repaint();
-    
-        if (currentMode == GraphEditorMode::ConnectNodes && connectNodeNode != nullptr)
-        {
-            connectNodeNode = nullptr;
-            return true;
-        }
-        if (currentMode == GraphEditorMode::AddString && stringFirstNode != nullptr)
-        {
-            stringFirstNode = nullptr;
-            return true;
-        }
-        else
-        {
-            setMode(GraphEditorMode::None);
-            return true;
-        }
+        goBack();
     }
     
     return false;
@@ -217,7 +207,11 @@ void GraphEditor::mouseDown(const MouseEvent &event)
     auto mouseXY = getMouseXYRelative();
     auto nodeUnderCursor = getNodeUnderCursor();
 
-    if (currentMode == GraphEditorMode::None)
+    if (event.mods.isRightButtonDown())
+    {
+        goBack();
+    }
+    else if (currentMode == GraphEditorMode::None)
     {
         if (nodeUnderCursor != nullptr)
         {
@@ -280,11 +274,7 @@ void GraphEditor::mouseDown(const MouseEvent &event)
     }
     else if (currentMode == GraphEditorMode::ConnectNodes)
     {
-        if (event.mods.isRightButtonDown())
-        {
-            connectNodeNode = nullptr;
-        }
-        else if (nodeUnderCursor != nullptr)
+        if (nodeUnderCursor != nullptr)
         {
             if (connectNodeNode == nullptr)
             {
@@ -320,6 +310,8 @@ void GraphEditor::mouseDown(const MouseEvent &event)
             node->valuePrev = 0.0;
             node->dxxPrev = 0.0;
         }
+        
+        processor->wavespeed = processor->referenceWavespeed;
     
         nodeUnderCursor->value = 1.0;
         nodeUnderCursor->valuePrev = 1.0;
@@ -373,4 +365,27 @@ void GraphEditor::paintNode(Graphics &g, float x, float y, float radius)
         y - radius,
         2.0 * radius,
         2.0 * radius);
+}
+
+void GraphEditor::goBack()
+{
+    repaint();
+
+    if (currentMode == GraphEditorMode::ConnectNodes && connectNodeNode != nullptr)
+    {
+        connectNodeNode = nullptr;
+    }
+    else if (currentMode == GraphEditorMode::AddString && stringFirstNode != nullptr)
+    {
+        stringFirstNode = nullptr;
+    }
+    else if (currentMode == GraphEditorMode::None && selectedNode != nullptr)
+    {
+        selectedNode = nullptr;
+        onNoteSelected();
+    }
+    else
+    {
+        setMode(GraphEditorMode::None);
+    }
 }

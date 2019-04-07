@@ -14,6 +14,7 @@
 #include <vector>
 #include <functional>
 #include "Node.h"
+#include "PluginProcessor.h"
 
 enum GraphEditorMode
 {
@@ -30,7 +31,7 @@ public:
     std::function<void()> onModeChanged;
     std::function<void()> onNoteSelected;
 
-    GraphEditor(std::vector<Node*> *nodes);
+    GraphEditor(std::vector<Node*> *nodes, GraphicalAudioProcessor *processor);
     
     GraphEditorMode getMode() { return currentMode; };
     
@@ -45,7 +46,9 @@ public:
     virtual void mouseMove(const MouseEvent &event) override;
 
 private:
+    GraphicalAudioProcessor *processor;
     void paintNode(Graphics &g, float x, float y, float radius);
+    void goBack();
 
     Node *getNodeUnderCursor();
 

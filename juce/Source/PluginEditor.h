@@ -29,6 +29,8 @@ public:
     void resized() override;
 
 private:
+    void updateInfoBoxVisibilities();
+
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
     GraphicalAudioProcessor& processor;
@@ -40,8 +42,18 @@ private:
     TextButton connectNodeButton;
     TextButton exciteNodeButton;
 
+    Component toplevelInfo;
+    Label stiffnessLabel;
+    Slider stiffnessSlider;
+    Label brightnessLabel;
+    Slider brightnessSlider;
+    Label decayLabel;
+    Slider decaySlider;
+
     Component nodeInfo;
+    Label boundaryConditionLabel;
     ToggleButton dirichletButton;
+    ToggleButton neumannButton;
     
     Component addStringInfo;
     Label addStringNumNodesLabel;
