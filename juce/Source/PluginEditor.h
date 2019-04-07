@@ -57,6 +57,9 @@ private:
     Label nodeOutputLabel;
     Slider nodeOutputSlider;
     
+    Label nodeInputLabel;
+    Slider nodeInputSlider;
+    
     Component addStringInfo;
     Label addStringNumNodesLabel;
     Slider addStringNumNodesSlider;

@@ -20,9 +20,14 @@ public:
     float sumConnected();
     float computeDxx();
     void finishUpdate();
+    
+    void setInputLevel(float value) { inputLevel = value; };
+    float getInputLevel() { return inputLevel; };
+    
     void setOutputLevel(float value) { outputLevel = value; };
     float getOutputLevel() { return outputLevel; };
     
 private:
     float outputLevel = 0.0;
+    float inputLevel = 0.0;
 };

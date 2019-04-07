@@ -92,6 +92,18 @@ void GraphEditor::paint(Graphics &g)
             g.setColour(Colour(0xFF282422));
         }
         
+        if (node->getInputLevel() >= 0.001)
+        {
+            float inputRadius = radius * (1.0 + node->getInputLevel());
+            g.setColour(Colour(0xFF37BE2C));
+            g.fillEllipse(
+                node->x - inputRadius,
+                node->y - inputRadius,
+                2.0 * inputRadius,
+                2.0 * inputRadius);
+            g.setColour(Colour(0xFF282422));
+        }
+        
         g.fillEllipse(
             node->x - radius,
             node->y - radius,

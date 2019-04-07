@@ -138,6 +138,22 @@ GraphicalAudioProcessorEditor::GraphicalAudioProcessorEditor (GraphicalAudioProc
         }
     };
     nodeInfo.addAndMakeVisible(nodeOutputSlider);
+
+    nodeInputLabel.setText("Input volume:", NotificationType::dontSendNotification);
+    nodeInfo.addAndMakeVisible(nodeInputLabel);
+    
+    nodeInputSlider.setSliderStyle(Slider::SliderStyle::LinearHorizontal);
+    nodeInputSlider.setRange(0, 100);
+    nodeInputSlider.setNumDecimalPlacesToDisplay(0);
+    nodeInputSlider.setValue(0);
+    nodeInputSlider.onValueChange = [&]()
+    {
+        if (graphEditor.getSelectedNode() != nullptr)
+        {
+            graphEditor.getSelectedNode()->setInputLevel(nodeInputSlider.getValue() / 100.0);
+        }
+    };
+    nodeInfo.addAndMakeVisible(nodeInputSlider);
     
     addAndMakeVisible(nodeInfo);
     nodeInfo.setVisible(false);
@@ -181,6 +197,7 @@ GraphicalAudioProcessorEditor::GraphicalAudioProcessorEditor (GraphicalAudioProc
     nodeA->x = graphEditor.getWidth() / 2.0;
     nodeA->y = graphEditor.getHeight() / 2.0;
     nodeA->isDirichlet = true;
+    nodeA->setInputLevel(1.0);
     auto *nodeB = new Node();
     nodeB->x = nodeA->x + 50;
     nodeB->y = nodeA->y;
@@ -276,6 +293,10 @@ void GraphicalAudioProcessorEditor::resized()
     nodeOutputLabel.setBounds(x, y, infoBoxWidth, toolBoxItemHeight);
     y += nodeOutputLabel.getHeight();
     nodeOutputSlider.setBounds(x, y, infoBoxWidth, toolBoxItemHeight);
+    y += nodeOutputSlider.getHeight() + margin;
+    nodeInputLabel.setBounds(x, y, infoBoxWidth, toolBoxItemHeight);
+    y += nodeInputLabel.getHeight();
+    nodeInputSlider.setBounds(x, y, infoBoxWidth, toolBoxItemHeight);
     
     
     // ADD STRING INFO
@@ -303,5 +324,6 @@ void GraphicalAudioProcessorEditor::updateInfoBoxVisibilities()
         dirichletButton.setToggleState(graphEditor.getSelectedNode()->isDirichlet, NotificationType::dontSendNotification);
         neumannButton.setToggleState(graphEditor.getSelectedNode()->isNeumann, NotificationType::dontSendNotification);
         nodeOutputSlider.setValue(100.0 * graphEditor.getSelectedNode()->getOutputLevel());
+        nodeInputSlider.setValue(100.0 * graphEditor.getSelectedNode()->getInputLevel());
     }
 }

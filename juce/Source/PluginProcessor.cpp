@@ -170,9 +170,15 @@ void GraphicalAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuff
             double freq = std::pow(c, note - 69) * 440;
             wavespeed = freq * (referenceWavespeed / 440.0);
             
-            auto *node = nodes.at(1);
-            node->value = 1.0;
-            node->valuePrev = 1.0;
+            for (auto *node : nodes)
+            {
+                if (node->getInputLevel() > 0.01)
+                {
+                    float v = node->getInputLevel();
+                    node->value = v;
+                    node->valuePrev = v;
+                }
+            }
         }
     }
     
