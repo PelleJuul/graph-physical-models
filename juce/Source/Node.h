@@ -17,6 +17,7 @@ public:
     bool isNeumann;
 
     void connect(Node *node);
+    void disconnect(Node *node);
     float sumConnected();
     float computeDxx();
     void finishUpdate();

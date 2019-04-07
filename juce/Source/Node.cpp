@@ -1,11 +1,23 @@
 #include "node.h"
 #include <stdio.h>
 #include <vector>
+#include <algorithm>
 
 void Node::connect(Node *node)
 {
     node->connections.push_back(this);
     connections.push_back(node);
+}
+
+void Node::disconnect(Node *node)
+{
+    std::vector<Node*>::iterator it = std::find(connections.begin(), connections.end(), node);
+    
+    while (it != connections.end())
+    {
+        connections.erase(it);
+        it = std::find(connections.begin(), connections.end(), node);
+    }
 }
 
 float Node::sumConnected()

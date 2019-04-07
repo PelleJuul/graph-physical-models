@@ -11,6 +11,7 @@
 #include "GraphEditor.h"
 #include "Node.h"
 #include <vector>
+#include <algorithm>
 
 GraphEditor::GraphEditor(std::vector<Node*> *nodes, GraphicalAudioProcessor *processor)
 {
@@ -222,6 +223,18 @@ bool GraphEditor::keyStateChanged (bool isDown)
     if (KeyPress::isKeyCurrentlyDown(KeyPress::escapeKey))
     {
         goBack();
+    }
+    
+    if (currentMode == GraphEditorMode::None && KeyPress::isKeyCurrentlyDown(KeyPress::backspaceKey) && selectedNode != nullptr)
+    {
+        for (auto *node : *nodes)
+        {
+            node->disconnect(selectedNode);
+        }
+        
+        nodes->erase(std::find(nodes->begin(), nodes->end(), selectedNode));
+        selectedNode = nullptr;
+        repaint();
     }
     
     return false;
