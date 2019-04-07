@@ -174,7 +174,7 @@ void GraphicalAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuff
             {
                 if (node->getInputLevel() > 0.01)
                 {
-                    float v = node->getInputLevel();
+                    float v = (message.getVelocity() / 127.0) * node->getInputLevel();
                     node->value = v;
                     node->valuePrev = v;
                 }
