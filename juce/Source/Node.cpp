@@ -60,3 +60,29 @@ void Node::finishUpdate()
     value = valueTemp;
     force = 0;
 }
+
+void Node::setWavespeed(float value)
+{
+    wavespeed = value;
+    std::vector<Node*> visited;
+    visited.push_back(this);
+
+    for (auto *n : connections)
+    {
+        n->setWavespeedInner(value, &visited);
+    }
+}
+
+void Node::setWavespeedInner(float value, std::vector<Node*> *visited)
+{
+    wavespeed = value;
+    visited->push_back(this);
+
+    for (auto *n : connections)
+    {
+        if (std::find(visited->begin(), visited->end(), n) == visited->end())
+        {
+            n->setWavespeedInner(value, visited);
+        }
+    }
+}

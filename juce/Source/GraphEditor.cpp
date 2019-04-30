@@ -448,7 +448,7 @@ void GraphEditor::mouseDown(const MouseEvent &event)
             node->dxxPrev = 0.0;
         }
         
-        processor->wavespeed = processor->referenceWavespeed;
+        processor->freq = 440;
     
         nodeUnderCursor->value = 1.0;
         nodeUnderCursor->valuePrev = 1.0;

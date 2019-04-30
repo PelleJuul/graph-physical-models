@@ -44,8 +44,6 @@ private:
     TextButton exciteNodeButton;
 
     Component toplevelInfo;
-    Label stiffnessLabel;
-    Slider stiffnessSlider;
     Label brightnessLabel;
     Slider brightnessSlider;
     Label decayLabel;
@@ -57,6 +55,8 @@ private:
     ToggleButton neumannButton;
     Label nodeOutputLabel;
     Slider nodeOutputSlider;
+    Label nodeWavespeedLabel;
+    Slider nodeWavespeedSlider;
     
     Label nodeInputLabel;
     Slider nodeInputSlider;

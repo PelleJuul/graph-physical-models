@@ -150,7 +150,6 @@ void GraphicalAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuff
     float k2 = k * k;
     float h = 1.0 / 50.0;
     float rh2 = 1.0 / (h * h);
-    float wavespeed2 = referenceWavespeed * referenceWavespeed;
     
     MidiBuffer::Iterator iterator(midiMessages);
     MidiMessage message;
@@ -167,8 +166,7 @@ void GraphicalAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuff
         {
             float c = std::pow(2, 1.0 / 12.0);
             int note = message.getNoteNumber();
-            double freq = std::pow(c, note - 69) * 440;
-            wavespeed = freq * (referenceWavespeed / 440.0);
+            freq = std::pow(c, note - 69) * 440;
             
             for (auto *node : nodes)
             {
@@ -191,6 +189,7 @@ void GraphicalAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuff
             float u1 = node->valuePrev;
             float dxx = rh2 * node->computeDxx();
             float dxx1 = node->dxxPrev;
+            float wavespeed = freq * (node->getWavespeed() / 440.0);
 
             float y = (1.0 / (1.0 + k * independentDampening)) *
             (

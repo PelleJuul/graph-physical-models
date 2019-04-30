@@ -59,8 +59,7 @@ public:
     void getStateInformation (MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
     
-    float referenceWavespeed = 100.0;
-    float wavespeed = 100.0;
+    float freq = 440;
     float independentDampening = 0.001;
     float dependentDampening = 0.001;
 

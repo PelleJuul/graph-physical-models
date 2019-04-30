@@ -91,18 +91,6 @@ GraphicalAudioProcessorEditor::GraphicalAudioProcessorEditor (GraphicalAudioProc
     };
     toplevelInfo.addAndMakeVisible(decaySlider);
     
-    stiffnessLabel.setText("Stiffness (pitch)", NotificationType::dontSendNotification);
-    toplevelInfo.addAndMakeVisible(stiffnessLabel);
-    
-    stiffnessSlider.setRange(1, 200);
-    stiffnessSlider.setNumDecimalPlacesToDisplay(0);
-    stiffnessSlider.setValue(100);
-    stiffnessSlider.onValueChange = [&]()
-    {
-        processor.referenceWavespeed = stiffnessSlider.getValue();
-    };
-    toplevelInfo.addAndMakeVisible(stiffnessSlider);
-    
     addAndMakeVisible(toplevelInfo);
     toplevelInfo.setVisible(false);
     
@@ -163,6 +151,21 @@ GraphicalAudioProcessorEditor::GraphicalAudioProcessorEditor (GraphicalAudioProc
         }
     };
     nodeInfo.addAndMakeVisible(nodeInputSlider);
+    
+    nodeWavespeedLabel.setText("Stiffness (pitch)", NotificationType::dontSendNotification);
+    nodeInfo.addAndMakeVisible(nodeWavespeedLabel);
+    
+    nodeWavespeedSlider.setRange(1, 500);
+    nodeWavespeedSlider.setNumDecimalPlacesToDisplay(2);
+    nodeWavespeedSlider.setValue(100);
+    nodeWavespeedSlider.onValueChange = [&]()
+    {
+        if (graphEditor.getSelectedNode() != nullptr)
+        {
+            graphEditor.getSelectedNode()->setWavespeed(nodeWavespeedSlider.getValue());
+        }
+    };
+    nodeInfo.addAndMakeVisible(nodeWavespeedSlider);
     
     addAndMakeVisible(nodeInfo);
     nodeInfo.setVisible(false);
@@ -280,6 +283,12 @@ void GraphicalAudioProcessorEditor::resized()
     float x = 0;
     float y = 0;
     
+    auto setInfoSize = [&](Component &c)
+    {
+        c.setBounds(x, y, infoBoxWidth, toolBoxItemHeight);
+        y += c.getHeight();
+    };
+    
     
     // TOOLBOX
     
@@ -317,11 +326,6 @@ void GraphicalAudioProcessorEditor::resized()
     decaySlider.setBounds(x, y, infoBoxWidth, toolBoxItemHeight);
     y += decaySlider.getHeight() + margin;
     
-    stiffnessLabel.setBounds(x, y, infoBoxWidth, toolBoxItemHeight);
-    y += stiffnessLabel.getHeight();
-    
-    stiffnessSlider.setBounds(x, y, infoBoxWidth, toolBoxItemHeight);
-    
     
     // NODE INFO
     
@@ -340,8 +344,11 @@ void GraphicalAudioProcessorEditor::resized()
     y += nodeOutputSlider.getHeight() + margin;
     nodeInputLabel.setBounds(x, y, infoBoxWidth, toolBoxItemHeight);
     y += nodeInputLabel.getHeight();
-    nodeInputSlider.setBounds(x, y, infoBoxWidth, toolBoxItemHeight);
+    setInfoSize(nodeInputSlider);
+    y += margin;
     
+    setInfoSize(nodeWavespeedLabel);
+    setInfoSize(nodeWavespeedSlider);
     
     // ADD STRING INFO
     
@@ -353,12 +360,6 @@ void GraphicalAudioProcessorEditor::resized()
     addStringNumNodesSlider.setBounds(x, y, infoBoxWidth, toolBoxItemHeight);
     
     // ADD GRID INFO
-    
-    auto setInfoSize = [&](Component &c)
-    {
-        c.setBounds(x, y, infoBoxWidth, toolBoxItemHeight);
-        y += c.getHeight();
-    };
     
     addGraphInfo.setBounds(getWidth() - infoBoxWidth, 0, infoBoxWidth, getHeight());
     x = margin;
@@ -388,5 +389,6 @@ void GraphicalAudioProcessorEditor::updateInfoBoxVisibilities()
         neumannButton.setToggleState(graphEditor.getSelectedNode()->isNeumann, NotificationType::dontSendNotification);
         nodeOutputSlider.setValue(100.0 * graphEditor.getSelectedNode()->getOutputLevel());
         nodeInputSlider.setValue(100.0 * graphEditor.getSelectedNode()->getInputLevel());
+        nodeWavespeedSlider.setValue(graphEditor.getSelectedNode()->getWavespeed());
     }
 }

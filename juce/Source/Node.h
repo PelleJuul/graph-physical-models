@@ -28,7 +28,13 @@ public:
     void setOutputLevel(float value) { outputLevel = value; };
     float getOutputLevel() { return outputLevel; };
     
+    void setWavespeed(float value);
+    const float getWavespeed() { return wavespeed; };
+    
 private:
+    float wavespeed = 100;
     float outputLevel = 0.0;
     float inputLevel = 0.0;
+    
+    void setWavespeedInner(float value, std::vector<Node*> *visited);
 };
