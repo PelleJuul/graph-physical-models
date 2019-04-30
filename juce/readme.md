@@ -40,6 +40,9 @@ In the tools menu you can access the following tools:
 * *Connect nodes* add connections between nodes.
   * Click on a node and then on another node to connect them.
   * Hold `shift` to connect nodes continuously.
+* *Add string* add a line of connected nodes
+  * Click somewhere on the canvas to begin drawing a string, click again to
+    finish the string.
 * *Excite nodes*
   * Click on a node to excite it to produce sound.
 
@@ -52,6 +55,7 @@ node and each line a connection.
   mode or tool.
 * Press `esc` to exit the current mode or action. 
 * Selected nodes are highlighted blue.
+  * Remove selected node with backspace
 * Nodes with boundary conditions are highlighted orange.
 
 ### Info menu

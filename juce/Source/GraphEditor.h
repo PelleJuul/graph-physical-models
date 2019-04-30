@@ -21,6 +21,7 @@ enum GraphEditorMode
     None,
     AddNode,
     AddString,
+    AddGrid,
     ConnectNodes,
     ExciteNode
 };
@@ -37,6 +38,8 @@ public:
     
     void setMode(GraphEditorMode newMode);
     void setAddStringModeNumNodes(int value) { numNodesInString = value; } ;
+    void setAddGridModeNumRows(int value) { addGridNumRows = value; };
+    void setAddGridModeNumCols(int value) { addGridNumCols = value; };
     Node *getSelectedNode() { return selectedNode; };
 
     virtual void timerCallback() override;
@@ -61,10 +64,13 @@ private:
     // The node selected with in connect nodes mode.
     Node *connectNodeNode = nullptr;
     
-    /// The first node of the string when in AddString mode. If this is
+    /// The first node of the string or grid when in AddString or AddGrid mode. If this is
     /// not null it means that we're building a string.
-    Node *stringFirstNode = nullptr;
+    Node *firstNodeWhenAdding = nullptr;
     
     /// The number of nodes in the stirng to be added in AddStringMode.
     int numNodesInString = 10;
+    
+    int addGridNumRows = 5;
+    int addGridNumCols = 5;
 };

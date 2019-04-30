@@ -135,26 +135,67 @@ void GraphEditor::paint(Graphics &g)
             2.0 * nodeRadius);
     }
     
-    if (currentMode == GraphEditorMode::AddString && stringFirstNode != nullptr)
+    if (currentMode == GraphEditorMode::AddString && firstNodeWhenAdding != nullptr)
     {
-        float dx = (mouseXY.getX() - stringFirstNode->x) / (float)(numNodesInString - 1);
-        float dy = (mouseXY.getY() - stringFirstNode->y) / (float)(numNodesInString - 1);
+        float dx = (mouseXY.getX() - firstNodeWhenAdding->x) / (float)(numNodesInString - 1);
+        float dy = (mouseXY.getY() - firstNodeWhenAdding->y) / (float)(numNodesInString - 1);
         
         g.setColour(Colours::grey);
         for (int i = 0; i < numNodesInString; i++)
         {
-            float x = stringFirstNode->x + i * dx;
-            float y = stringFirstNode->y + i * dy;
+            float x = firstNodeWhenAdding->x + i * dx;
+            float y = firstNodeWhenAdding->y + i * dy;
             paintNode(g, x, y, nodeRadius);
         }
         
         for (int i = 1; i < numNodesInString; i++)
         {
-            float x1 = stringFirstNode->x + i * dx;
-            float y1 = stringFirstNode->y + i * dy;
-            float x2 = stringFirstNode->x + (i-1) * dx;
-            float y2 = stringFirstNode->y + (i-1) * dy;
+            float x1 = firstNodeWhenAdding->x + i * dx;
+            float y1 = firstNodeWhenAdding->y + i * dy;
+            float x2 = firstNodeWhenAdding->x + (i-1) * dx;
+            float y2 = firstNodeWhenAdding->y + (i-1) * dy;
             g.drawLine(x1, y1, x2, y2);
+        }
+    }
+    
+    if (currentMode == GraphEditorMode::AddGrid && firstNodeWhenAdding != nullptr)
+    {
+        float dx = (mouseXY.getX() - firstNodeWhenAdding->x) / (float)(addGridNumCols - 1);
+        float dy = (mouseXY.getY() - firstNodeWhenAdding->y) / (float)(addGridNumRows - 1);
+        
+        g.setColour(Colours::grey);
+        
+        for (int c = 0; c < addGridNumCols; c++)
+        {
+            float x = firstNodeWhenAdding->x + dx * c;
+            
+            for (int r = 0; r < addGridNumRows; r++)
+            {
+                float y = firstNodeWhenAdding->y + dy * r;
+                paintNode(g, x, y, nodeRadius);
+            }
+        }
+        
+        for (int c = 0; c < addGridNumCols; c++)
+        {
+            float x1 = firstNodeWhenAdding->x + dx * c;
+            float x2 = firstNodeWhenAdding->x + dx * (c + 1);
+            
+            for (int r = 0; r < addGridNumRows; r++)
+            {
+                float y1 = firstNodeWhenAdding->y + dy * r;
+                float y2 = firstNodeWhenAdding->y + dy * (r + 1);
+                
+                if (r < addGridNumRows - 1)
+                {
+                    g.drawLine(x1, y1, x1, y2); // Below
+                }
+                
+                if (c < addGridNumCols - 1)
+                {
+                    g.drawLine(x1, y1, x2, y1); // Left
+                }
+            }
         }
     }
     
@@ -207,7 +248,12 @@ void GraphEditor::setMode(GraphEditorMode newMode)
     
     if (currentMode == GraphEditorMode::AddString)
     {
-        stringFirstNode = nullptr;
+        firstNodeWhenAdding = nullptr;
+    }
+    
+    if (currentMode == GraphEditorMode::AddGrid)
+    {
+        firstNodeWhenAdding = nullptr;
     }
     
     if (onModeChanged)
@@ -281,33 +327,86 @@ void GraphEditor::mouseDown(const MouseEvent &event)
     }
     else if (currentMode == GraphEditorMode::AddString)
     {
-        if (stringFirstNode == nullptr)
+        if (firstNodeWhenAdding == nullptr)
         {
             auto *node = new Node();
             node->x = mouseXY.getX();
             node->y = mouseXY.getY();
-            stringFirstNode = node;
+            firstNodeWhenAdding = node;
         }
         else
         {
-            // TODO: Add nodes in string.
-            float dx = (mouseXY.getX() - stringFirstNode->x) / (float)(numNodesInString - 1);
-            float dy = (mouseXY.getY() - stringFirstNode->y) / (float)(numNodesInString - 1);
+            float dx = (mouseXY.getX() - firstNodeWhenAdding->x) / (float)(numNodesInString - 1);
+            float dy = (mouseXY.getY() - firstNodeWhenAdding->y) / (float)(numNodesInString - 1);
             
-            auto *prevNode = stringFirstNode;
-            nodes->push_back(stringFirstNode);
+            auto *prevNode = firstNodeWhenAdding;
+            nodes->push_back(firstNodeWhenAdding);
             
             for (int i = 1; i < numNodesInString; i++)
             {
                 auto *node = new Node();
-                node->x = stringFirstNode->x + i * dx;
-                node->y = stringFirstNode->y + i * dy;
+                node->x = firstNodeWhenAdding->x + i * dx;
+                node->y = firstNodeWhenAdding->y + i * dy;
                 prevNode->connect(node);
                 nodes->push_back(node);
                 prevNode = node;
             }
             
-            stringFirstNode = nullptr;
+            firstNodeWhenAdding = nullptr;
+        }
+    }
+    else if (currentMode == GraphEditorMode::AddGrid)
+    {
+        if (firstNodeWhenAdding == nullptr)
+        {
+            auto *node = new Node();
+            node->x = mouseXY.getX();
+            node->y = mouseXY.getY();
+            firstNodeWhenAdding = node;
+        }
+        else
+        {
+            float dx = (mouseXY.getX() - firstNodeWhenAdding->x) / (float)(addGridNumCols - 1);
+            float dy = (mouseXY.getY() - firstNodeWhenAdding->y) / (float)(addGridNumRows - 1);
+            
+            std::vector<Node*> nodesInGrid;
+            nodesInGrid.reserve(addGridNumCols * addGridNumRows);
+            
+            for (int i = 0; i < addGridNumCols * addGridNumRows; i++)
+            {
+                nodesInGrid.push_back(nullptr);
+            }
+        
+            for (int c = 0; c < addGridNumCols; c++)
+            {
+                float x = firstNodeWhenAdding->x + dx * c;
+                
+                for (int r = 0; r < addGridNumRows; r++)
+                {
+                    float y = firstNodeWhenAdding->y + dy * r;
+                    Node *node = new Node();
+                    nodes->push_back(node);
+                    node->x = x;
+                    node->y = y;
+                    
+                    int i = r * addGridNumRows + c;
+                    nodesInGrid.at(i) = node;
+                    
+                    if (r > 0)
+                    {
+                        Node *nodeAbove = nodesInGrid.at((r-1) * addGridNumRows + c);
+                        node->connect(nodeAbove);
+                    }
+                    
+                    if (c > 0)
+                    {
+                        Node *nodeLeft = nodesInGrid.at(r * addGridNumRows + (c - 1));
+                        node->connect(nodeLeft);
+                    }
+                }
+            }
+            
+            firstNodeWhenAdding = nullptr;
         }
     }
     else if (currentMode == GraphEditorMode::ConnectNodes)
@@ -413,9 +512,9 @@ void GraphEditor::goBack()
     {
         connectNodeNode = nullptr;
     }
-    else if (currentMode == GraphEditorMode::AddString && stringFirstNode != nullptr)
+    else if (currentMode == GraphEditorMode::AddString && firstNodeWhenAdding != nullptr)
     {
-        stringFirstNode = nullptr;
+        firstNodeWhenAdding = nullptr;
     }
     else if (currentMode == GraphEditorMode::None && selectedNode != nullptr)
     {

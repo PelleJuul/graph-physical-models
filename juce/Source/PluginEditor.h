@@ -39,6 +39,7 @@ private:
     Component toolMenu;
     TextButton addNodeButton;
     TextButton addStringButton;
+    TextButton addGridButton;
     TextButton connectNodeButton;
     TextButton exciteNodeButton;
 
@@ -63,6 +64,12 @@ private:
     Component addStringInfo;
     Label addStringNumNodesLabel;
     Slider addStringNumNodesSlider;
-
+    
+    Component addGraphInfo;
+    Label addGridNumRowsLabel;
+    Slider addGridNumRowsSlider;
+    Label addGraphNumColsLabel;
+    Slider addGraphNumColsSlider;
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GraphicalAudioProcessorEditor)
 };

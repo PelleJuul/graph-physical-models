@@ -10,6 +10,7 @@
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include <functional>
 
 //==============================================================================
 GraphicalAudioProcessorEditor::GraphicalAudioProcessorEditor (GraphicalAudioProcessor& p)
@@ -39,6 +40,14 @@ GraphicalAudioProcessorEditor::GraphicalAudioProcessorEditor (GraphicalAudioProc
     };
     addAndMakeVisible(addStringButton);
     
+    addGridButton.setButtonText("Add grid");
+    addGridButton.setTooltip("Add a grid to the model");
+    addGridButton.onClick = [&]()
+    {
+        graphEditor.setMode(GraphEditorMode::AddGrid);
+    };
+    addAndMakeVisible(addGridButton);
+    
     connectNodeButton.setButtonText("Connect nodes");
     connectNodeButton.setTooltip("Connect nodes in the graph");
     connectNodeButton.onClick = [&]()
@@ -63,7 +72,7 @@ GraphicalAudioProcessorEditor::GraphicalAudioProcessorEditor (GraphicalAudioProc
     
     brightnessSlider.setRange(0, 100);
     brightnessSlider.setNumDecimalPlacesToDisplay(0);
-    brightnessSlider.setValue(90);
+    brightnessSlider.setValue(95);
     brightnessSlider.onValueChange = [&]()
     {
         processor.dependentDampening = 0.01 * (1.0 - brightnessSlider.getValue() / 100.0);
@@ -75,7 +84,7 @@ GraphicalAudioProcessorEditor::GraphicalAudioProcessorEditor (GraphicalAudioProc
     
     decaySlider.setRange(0, 100);
     decaySlider.setNumDecimalPlacesToDisplay(0);
-    decaySlider.setValue(90);
+    decaySlider.setValue(5);
     decaySlider.onValueChange = [&]()
     {
         processor.independentDampening = 30.0 * (decaySlider.getValue() / 100.0);
@@ -164,7 +173,7 @@ GraphicalAudioProcessorEditor::GraphicalAudioProcessorEditor (GraphicalAudioProc
     addStringNumNodesSlider.setSliderStyle(Slider::SliderStyle::LinearHorizontal);
     addStringNumNodesSlider.setRange(2, 200);
     addStringNumNodesSlider.setNumDecimalPlacesToDisplay(0);
-    addStringNumNodesSlider.setValue(20);
+    addStringNumNodesSlider.setValue(5);
     addStringNumNodesSlider.onValueChange = [&]()
     {
         graphEditor.setAddStringModeNumNodes(addStringNumNodesSlider.getValueObject().getValue());
@@ -176,6 +185,38 @@ GraphicalAudioProcessorEditor::GraphicalAudioProcessorEditor (GraphicalAudioProc
     
     addAndMakeVisible(addStringInfo);
     addStringInfo.setVisible(false);
+    
+    
+    // ADD GRAPH INFO
+    
+    addGridNumRowsLabel.setText("Number of rows:", NotificationType::dontSendNotification);
+    addGraphInfo.addAndMakeVisible(addGridNumRowsLabel);
+    
+    addGridNumRowsSlider.setSliderStyle(Slider::SliderStyle::LinearHorizontal);
+    addGridNumRowsSlider.setRange(2, 20);
+    addGridNumRowsSlider.setNumDecimalPlacesToDisplay(0);
+    addGridNumRowsSlider.setValue(5);
+    addGridNumRowsSlider.onValueChange = [&]()
+    {
+        graphEditor.setAddGridModeNumRows(addGridNumRowsSlider.getValueObject().getValue());
+    };
+    addGraphInfo.addAndMakeVisible(addGridNumRowsSlider);
+    
+    addGraphNumColsLabel.setText("Number of columns:", NotificationType::dontSendNotification);
+    addGraphInfo.addAndMakeVisible(addGraphNumColsLabel);
+    
+    addGraphNumColsSlider.setSliderStyle(Slider::SliderStyle::LinearHorizontal);
+    addGraphNumColsSlider.setRange(2, 20);
+    addGraphNumColsSlider.setNumDecimalPlacesToDisplay(0);
+    addGraphNumColsSlider.setValue(5);
+    addGraphNumColsSlider.onValueChange = [&]()
+    {
+        graphEditor.setAddGridModeNumCols(addGraphNumColsSlider.getValueObject().getValue());
+    };
+    addGraphInfo.addAndMakeVisible(addGraphNumColsSlider);
+    
+    addAndMakeVisible(addGraphInfo);
+    addGraphInfo.setVisible(false);
     
     
     // STATE CHANGE HANDLING
@@ -248,6 +289,9 @@ void GraphicalAudioProcessorEditor::resized()
     addStringButton.setBounds(x, y, toolBoxWidth, toolBoxItemHeight);
     y += addStringButton.getHeight() + margin;
     
+    addGridButton.setBounds(x, y, toolBoxWidth, toolBoxItemHeight);
+    y += addGridButton.getHeight() + margin;
+    
     connectNodeButton.setBounds(x, y, toolBoxWidth, toolBoxItemHeight);
     y += connectNodeButton.getHeight() + margin;
     
@@ -300,12 +344,30 @@ void GraphicalAudioProcessorEditor::resized()
     
     
     // ADD STRING INFO
+    
     addStringInfo.setBounds(getWidth() - infoBoxWidth, 0, infoBoxWidth, getHeight());
     x = margin;
     y = 0;
     addStringNumNodesLabel.setBounds(x, y, infoBoxWidth, toolBoxItemHeight);
     y += addStringNumNodesLabel.getHeight();
     addStringNumNodesSlider.setBounds(x, y, infoBoxWidth, toolBoxItemHeight);
+    
+    // ADD GRID INFO
+    
+    auto setInfoSize = [&](Component &c)
+    {
+        c.setBounds(x, y, infoBoxWidth, toolBoxItemHeight);
+        y += c.getHeight();
+    };
+    
+    addGraphInfo.setBounds(getWidth() - infoBoxWidth, 0, infoBoxWidth, getHeight());
+    x = margin;
+    y = 0;
+    setInfoSize(addGridNumRowsLabel);
+    setInfoSize(addGridNumRowsSlider);
+    y += margin;
+    setInfoSize(addGraphNumColsLabel);
+    setInfoSize(addGraphNumColsSlider);
     
     graphEditor.toBack();
     nodeInfo.toFront(false);
@@ -318,6 +380,7 @@ void GraphicalAudioProcessorEditor::updateInfoBoxVisibilities()
         (graphEditor.getMode() == GraphEditorMode::ExciteNode));
     nodeInfo.setVisible(graphEditor.getMode() == GraphEditorMode::None && graphEditor.getSelectedNode() != nullptr);
     addStringInfo.setVisible(graphEditor.getMode() == GraphEditorMode::AddString);
+    addGraphInfo.setVisible(graphEditor.getMode() == GraphEditorMode::AddGrid);
     
     if (graphEditor.getSelectedNode() != nullptr)
     {

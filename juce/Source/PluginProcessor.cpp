@@ -148,7 +148,7 @@ void GraphicalAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuff
     
     float k = 1.0 / getSampleRate();
     float k2 = k * k;
-    float h = 1.0 / 100.0;
+    float h = 1.0 / 50.0;
     float rh2 = 1.0 / (h * h);
     float wavespeed2 = referenceWavespeed * referenceWavespeed;
     
