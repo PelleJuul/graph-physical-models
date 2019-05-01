@@ -167,6 +167,16 @@ GraphicalAudioProcessorEditor::GraphicalAudioProcessorEditor (GraphicalAudioProc
     };
     nodeInfo.addAndMakeVisible(nodeWavespeedSlider);
     
+    nodeIgnoreMidiButton.setButtonText("Ignore MIDI");
+    nodeInfo.addAndMakeVisible(nodeIgnoreMidiButton);
+    nodeIgnoreMidiButton.onStateChange = [&]()
+    {
+        if (graphEditor.getSelectedNode() != nullptr)
+        {
+            graphEditor.getSelectedNode()->setIgnoreMidi(nodeIgnoreMidiButton.getToggleState());
+        }
+    };
+    
     addAndMakeVisible(nodeInfo);
     nodeInfo.setVisible(false);
     
@@ -346,9 +356,10 @@ void GraphicalAudioProcessorEditor::resized()
     y += nodeInputLabel.getHeight();
     setInfoSize(nodeInputSlider);
     y += margin;
-    
     setInfoSize(nodeWavespeedLabel);
     setInfoSize(nodeWavespeedSlider);
+    y += margin;
+    setInfoSize(nodeIgnoreMidiButton);
     
     // ADD STRING INFO
     
@@ -385,10 +396,12 @@ void GraphicalAudioProcessorEditor::updateInfoBoxVisibilities()
     
     if (graphEditor.getSelectedNode() != nullptr)
     {
+        auto *node = graphEditor.getSelectedNode();
         dirichletButton.setToggleState(graphEditor.getSelectedNode()->isDirichlet, NotificationType::dontSendNotification);
         neumannButton.setToggleState(graphEditor.getSelectedNode()->isNeumann, NotificationType::dontSendNotification);
         nodeOutputSlider.setValue(100.0 * graphEditor.getSelectedNode()->getOutputLevel());
         nodeInputSlider.setValue(100.0 * graphEditor.getSelectedNode()->getInputLevel());
         nodeWavespeedSlider.setValue(graphEditor.getSelectedNode()->getWavespeed());
+        nodeIgnoreMidiButton.setToggleState(node->getIgnoreMidi(), NotificationType::dontSendNotification);
     }
 }

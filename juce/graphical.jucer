@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="XJYa4B" name="graphical" projectType="audioplug" jucerVersion="5.4.1">
+<JUCERPROJECT id="XJYa4B" name="graphical" projectType="audioplug" jucerVersion="5.4.1"
+              pluginCharacteristicsValue="pluginIsSynth,pluginWantsMidiIn">
   <MAINGROUP id="wgWJxX" name="graphical">
     <GROUP id="{06A3B437-C7FD-C087-64E2-39CFECD16EB1}" name="Source">
       <FILE id="xgttw1" name="Node.cpp" compile="1" resource="0" file="Source/Node.cpp"/>

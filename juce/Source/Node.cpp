@@ -1,7 +1,8 @@
-#include "node.h"
+#include "Node.h"
 #include <stdio.h>
 #include <vector>
 #include <algorithm>
+#include <functional>
 
 void Node::connect(Node *node)
 {
@@ -63,26 +64,46 @@ void Node::finishUpdate()
 
 void Node::setWavespeed(float value)
 {
-    wavespeed = value;
+    auto f = [&](Node *node)
+    {
+        node->wavespeed = value;
+    };
+    
+    visitConnected(f);
+}
+
+void Node::visitConnected(std::function<void(Node*)> f)
+{
+    f(this);
     std::vector<Node*> visited;
     visited.push_back(this);
 
     for (auto *n : connections)
     {
-        n->setWavespeedInner(value, &visited);
+        n->visitConnectedInner(f, &visited);
     }
 }
 
-void Node::setWavespeedInner(float value, std::vector<Node*> *visited)
+void Node::setIgnoreMidi(bool value)
 {
-    wavespeed = value;
+    auto f = [&](Node *node)
+    {
+        node->midiDisabled = value;
+    };
+    
+    visitConnected(f);
+}
+
+void Node::visitConnectedInner(std::function<void(Node*)> f, std::vector<Node*> *visited)
+{
+    f(this);
     visited->push_back(this);
 
     for (auto *n : connections)
     {
         if (std::find(visited->begin(), visited->end(), n) == visited->end())
         {
-            n->setWavespeedInner(value, visited);
+            n->visitConnectedInner(f, visited);
         }
     }
 }

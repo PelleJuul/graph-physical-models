@@ -57,6 +57,7 @@ private:
     Slider nodeOutputSlider;
     Label nodeWavespeedLabel;
     Slider nodeWavespeedSlider;
+    ToggleButton nodeIgnoreMidiButton;
     
     Label nodeInputLabel;
     Slider nodeInputSlider;

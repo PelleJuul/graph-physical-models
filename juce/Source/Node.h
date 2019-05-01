@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <functional>
 
 class Node
 {
@@ -28,13 +29,20 @@ public:
     void setOutputLevel(float value) { outputLevel = value; };
     float getOutputLevel() { return outputLevel; };
     
+    void setIgnoreMidi(bool value);
+    bool getIgnoreMidi() { return midiDisabled; };
+    
     void setWavespeed(float value);
     const float getWavespeed() { return wavespeed; };
+    
+    void visitConnected(std::function<void(Node*)> f);
     
 private:
     float wavespeed = 100;
     float outputLevel = 0.0;
     float inputLevel = 0.0;
+    bool midiDisabled = false;
     
     void setWavespeedInner(float value, std::vector<Node*> *visited);
+    void visitConnectedInner(std::function<void(Node*)> f, std::vector<Node*> *visited);
 };

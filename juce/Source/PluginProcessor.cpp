@@ -15,12 +15,7 @@
 GraphicalAudioProcessor::GraphicalAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
      : AudioProcessor (BusesProperties()
-                     #if ! JucePlugin_IsMidiEffect
-                      #if ! JucePlugin_IsSynth
-                       .withInput  ("Input",  AudioChannelSet::stereo(), true)
-                      #endif
                        .withOutput ("Output", AudioChannelSet::stereo(), true)
-                     #endif
                        )
 #endif
 {
@@ -97,6 +92,7 @@ void GraphicalAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
+    reset();
 }
 
 void GraphicalAudioProcessor::releaseResources()
@@ -189,7 +185,7 @@ void GraphicalAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuff
             float u1 = node->valuePrev;
             float dxx = rh2 * node->computeDxx();
             float dxx1 = node->dxxPrev;
-            float wavespeed = freq * (node->getWavespeed() / 440.0);
+            float wavespeed = node->getIgnoreMidi() ? node->getWavespeed() : freq * (node->getWavespeed() / 440.0);
 
             float y = (1.0 / (1.0 + k * independentDampening)) *
             (
