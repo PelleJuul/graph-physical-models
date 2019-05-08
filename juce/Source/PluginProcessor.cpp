@@ -178,6 +178,11 @@ void GraphicalAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuff
     
     for (int i = 0; i < buffer.getNumSamples(); i++)
     {
+        for (auto *c : connections)
+        {
+            c->computeForce(k);
+        }
+    
         for (int n = 0; n < nodes.size(); n++)
         {
             auto node = nodes.at(n);
@@ -186,7 +191,14 @@ void GraphicalAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuff
             float dxx = rh2 * node->computeDxx();
             float dxx1 = node->dxxPrev;
             float wavespeed = node->getIgnoreMidi() ? node->getWavespeed() : freq * (node->getWavespeed() / 440.0);
-
+            
+            float fc = 0;
+            
+            for (auto c : node->externalConnections)
+            {
+                fc += c->getComputedForce();
+            }
+            
             float y = (1.0 / (1.0 + k * independentDampening)) *
             (
                 k2 * (wavespeed * wavespeed) * dxx +
@@ -213,17 +225,10 @@ void GraphicalAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuff
         channel0[i] = y;
     }
 
-    // This is the place where you'd normally do the guts of your plugin's
-    // audio processing...
-    // Make sure to reset the state if your inner loop is processing
-    // the samples and the outer loop is handling the channels.
-    // Alternatively, you can process the samples with the channels
-    // interleaved by keeping the same state.
-    for (int channel = 1; channel < totalNumInputChannels; ++channel)
-    {
-        buffer.copyFrom(1, 0, buffer, 0, 0, buffer.getNumSamples());
 
-        // ..do something to the data...
+    for (int channel = 1; channel < totalNumOutputChannels; ++channel)
+    {
+        buffer.copyFrom(channel, 0, buffer, 0, 0, buffer.getNumSamples());
     }
 }
 

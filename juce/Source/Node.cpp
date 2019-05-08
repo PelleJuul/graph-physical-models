@@ -10,6 +10,11 @@ void Node::connect(Node *node)
     connections.push_back(node);
 }
 
+void Node::connectExternal(Connection *connection)
+{
+    externalConnections.push_back(connection);
+}
+
 void Node::disconnect(Node *node)
 {
     std::vector<Node*>::iterator it = std::find(connections.begin(), connections.end(), node);

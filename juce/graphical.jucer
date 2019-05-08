@@ -4,6 +4,8 @@
               pluginCharacteristicsValue="pluginIsSynth,pluginWantsMidiIn">
   <MAINGROUP id="wgWJxX" name="graphical">
     <GROUP id="{06A3B437-C7FD-C087-64E2-39CFECD16EB1}" name="Source">
+      <FILE id="j68Bh2" name="Connection.cpp" compile="1" resource="0" file="Source/Connection.cpp"/>
+      <FILE id="b8t39H" name="Connection.h" compile="0" resource="0" file="Source/Connection.h"/>
       <FILE id="xgttw1" name="Node.cpp" compile="1" resource="0" file="Source/Node.cpp"/>
       <FILE id="Zm57ar" name="Node.h" compile="0" resource="0" file="Source/Node.h"/>
       <FILE id="Ebrouo" name="GraphEditor.cpp" compile="1" resource="0" file="Source/GraphEditor.cpp"/>

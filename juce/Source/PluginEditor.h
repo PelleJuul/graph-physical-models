@@ -41,7 +41,9 @@ private:
     TextButton addStringButton;
     TextButton addGridButton;
     TextButton connectNodeButton;
+    TextButton connectGraphButton;
     TextButton exciteNodeButton;
+    TextButton resetButton;
 
     Component toplevelInfo;
     Label brightnessLabel;
@@ -58,6 +60,14 @@ private:
     Label nodeWavespeedLabel;
     Slider nodeWavespeedSlider;
     ToggleButton nodeIgnoreMidiButton;
+    
+    Component connectionInfo;
+    Label connectionLinearLabel;
+    Slider connectionLinearSlider;
+    Label connectionNonLinearLabel;
+    Slider connectionNonLinearSlider;
+    Label connectionDampeningLabel;
+    Slider connectionDampeningSlider;
     
     Label nodeInputLabel;
     Slider nodeInputSlider;

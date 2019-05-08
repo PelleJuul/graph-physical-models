@@ -14,7 +14,7 @@
 
 //==============================================================================
 GraphicalAudioProcessorEditor::GraphicalAudioProcessorEditor (GraphicalAudioProcessor& p)
-    : AudioProcessorEditor (&p), processor (p), graphEditor(&p.nodes, &p)
+    : AudioProcessorEditor (&p), processor (p), graphEditor(&p.nodes, &p.connections, &p)
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
@@ -56,6 +56,14 @@ GraphicalAudioProcessorEditor::GraphicalAudioProcessorEditor (GraphicalAudioProc
     };
     addAndMakeVisible(connectNodeButton);
     
+    connectGraphButton.setButtonText("Connect graphs");
+    connectGraphButton.setTooltip("Connect multiple subgraphs");
+    connectGraphButton.onClick = [&]()
+    {
+        graphEditor.setMode(GraphEditorMode::AddExternalConnection);
+    };
+    addAndMakeVisible(connectGraphButton);
+    
     exciteNodeButton.setButtonText("Excite node");
     exciteNodeButton.setTooltip("Excite a node to produce sound");
     exciteNodeButton.onClick = [&]()
@@ -63,6 +71,19 @@ GraphicalAudioProcessorEditor::GraphicalAudioProcessorEditor (GraphicalAudioProc
         graphEditor.setMode(GraphEditorMode::ExciteNode);
     };
     addAndMakeVisible(exciteNodeButton);
+    
+    resetButton.setButtonText("Reset");
+    resetButton.setTooltip("Reset the position of all nodes.");
+    resetButton.onClick = [&]()
+    {
+        for (Node *n : processor.nodes)
+        {
+            n->value = 0;
+            n->valuePrev = 0;
+            n->valueTemp = 0;
+        }
+    };
+    addAndMakeVisible(resetButton);
     
     
     // SELECT NODE / TOPLEVEL TOOLBOX
@@ -180,13 +201,59 @@ GraphicalAudioProcessorEditor::GraphicalAudioProcessorEditor (GraphicalAudioProc
     addAndMakeVisible(nodeInfo);
     nodeInfo.setVisible(false);
     
+    // CONNECTION INFO
     
+    connectionLinearLabel.setText("Linear", NotificationType::dontSendNotification);
+    connectionInfo.addAndMakeVisible(connectionLinearLabel);
+    
+    connectionLinearSlider.setRange(1, 200);
+    connectionLinearSlider.setNumDecimalPlacesToDisplay(2);
+    connectionLinearSlider.setValue(100);
+    connectionLinearSlider.onValueChange = [&]()
+    {
+        if (graphEditor.getSelectedConnection() != nullptr)
+        {
+            graphEditor.getSelectedConnection()->setLinearCoef(connectionLinearSlider.getValue());
+        }
+    };
+    connectionInfo.addAndMakeVisible(connectionLinearSlider);
+
+    connectionNonLinearLabel.setText("Non linear", NotificationType::dontSendNotification);
+    connectionInfo.addAndMakeVisible(connectionNonLinearLabel);
+    
+    connectionNonLinearSlider.setRange(1, 200);
+    connectionNonLinearSlider.setNumDecimalPlacesToDisplay(2);
+    connectionNonLinearSlider.setValue(100);
+    connectionNonLinearSlider.onValueChange = [&]()
+    {
+        if (graphEditor.getSelectedConnection() != nullptr)
+        {
+            graphEditor.getSelectedConnection()->setNonLinearCoed(connectionNonLinearSlider.getValue());
+        }
+    };
+    connectionInfo.addAndMakeVisible(connectionNonLinearSlider);
+    
+    connectionDampeningLabel.setText("Dampening", NotificationType::dontSendNotification);
+    connectionInfo.addAndMakeVisible(connectionDampeningLabel);
+    
+    connectionDampeningSlider.setRange(1, 200);
+    connectionDampeningSlider.setNumDecimalPlacesToDisplay(2);
+    connectionDampeningSlider.setValue(100);
+    connectionDampeningSlider.onValueChange = [&]()
+    {
+        if (graphEditor.getSelectedConnection() != nullptr)
+        {
+            graphEditor.getSelectedConnection()->setDampening(connectionDampeningSlider.getValue());
+        }
+    };
+    connectionInfo.addAndMakeVisible(connectionDampeningSlider);
+
     // ADD STRING INFO
     
     addStringNumNodesSlider.setSliderStyle(Slider::SliderStyle::LinearHorizontal);
     addStringNumNodesSlider.setRange(2, 200);
     addStringNumNodesSlider.setNumDecimalPlacesToDisplay(0);
-    addStringNumNodesSlider.setValue(5);
+    addStringNumNodesSlider.setValue(20);
     addStringNumNodesSlider.onValueChange = [&]()
     {
         graphEditor.setAddStringModeNumNodes(addStringNumNodesSlider.getValueObject().getValue());
@@ -314,6 +381,9 @@ void GraphicalAudioProcessorEditor::resized()
     connectNodeButton.setBounds(x, y, toolBoxWidth, toolBoxItemHeight);
     y += connectNodeButton.getHeight() + margin;
     
+    connectGraphButton.setBounds(x, y, toolBoxWidth, toolBoxItemHeight);
+    y += connectGraphButton.getHeight() + margin;
+    
     exciteNodeButton.setBounds(x, y, toolBoxWidth, toolBoxItemHeight);
     
     graphEditor.setBounds(0, 0, getWidth() - infoBoxWidth, getHeight());
@@ -388,7 +458,7 @@ void GraphicalAudioProcessorEditor::resized()
 void GraphicalAudioProcessorEditor::updateInfoBoxVisibilities()
 {
     toplevelInfo.setVisible(
-        (graphEditor.getMode() == GraphEditorMode::None && graphEditor.getSelectedNode() == nullptr) ||
+        (graphEditor.getMode() == GraphEditorMode::None && (graphEditor.getSelectedNode() == nullptr && graphEditor.getSelectedConnection() == nullptr)) ||
         (graphEditor.getMode() == GraphEditorMode::ExciteNode));
     nodeInfo.setVisible(graphEditor.getMode() == GraphEditorMode::None && graphEditor.getSelectedNode() != nullptr);
     addStringInfo.setVisible(graphEditor.getMode() == GraphEditorMode::AddString);
@@ -403,5 +473,14 @@ void GraphicalAudioProcessorEditor::updateInfoBoxVisibilities()
         nodeInputSlider.setValue(100.0 * graphEditor.getSelectedNode()->getInputLevel());
         nodeWavespeedSlider.setValue(graphEditor.getSelectedNode()->getWavespeed());
         nodeIgnoreMidiButton.setToggleState(node->getIgnoreMidi(), NotificationType::dontSendNotification);
+    }
+    
+    if (graphEditor.getSelectedConnection() != nullptr)
+    {
+        auto *c = graphEditor.getSelectedConnection();
+        
+        connectionLinearSlider.setValue(c->getLinearCoef());
+        connectionNonLinearSlider.setValue(c->getNonLinearCoef());
+        connectionDampeningSlider.setValue(c->getDampening());
     }
 }

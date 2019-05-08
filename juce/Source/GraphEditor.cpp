@@ -13,9 +13,10 @@
 #include <vector>
 #include <algorithm>
 
-GraphEditor::GraphEditor(std::vector<Node*> *nodes, GraphicalAudioProcessor *processor)
+GraphEditor::GraphEditor(std::vector<Node*> *nodes, std::vector<Connection*> *connections, GraphicalAudioProcessor *processor)
 {
     this->nodes = nodes;
+    this->connections = connections;
     this->processor = processor;
     currentMode = GraphEditorMode::None;
     setWantsKeyboardFocus(true);
@@ -38,13 +39,26 @@ void GraphEditor::paint(Graphics &g)
     // Draw connections between nodes
     for (auto *node : *nodes)
     {
+        g.setColour(Colours::darkgrey);
         for (auto *other : node->connections)
         {
             g.drawLine(node->x, node->y, other->x, other->y);
         }
     }
-    
     auto mouseXY = getMouseXYRelative();
+    for (auto *connection : *connections)
+    {
+        auto a = connection->getNodeA();
+        auto b = connection->getNodeB();
+        g.setColour(Colours::green);
+        float t = 3.0; //2.0 + connection->getComputedForce() / 1000.0;
+        g.drawLine(a->x, a->y, b->x, b->y, t);
+        float x, y;
+        connection->getCenter(&x, &y);
+        g.fillEllipse(x - nodeRadius, y - nodeRadius, 2 * nodeRadius, 2 * nodeRadius);
+    }
+    
+    
     auto *nodeUnderCursor = getNodeUnderCursor();
     
     // Draw line from node to mouse if in connect mode
@@ -60,6 +74,11 @@ void GraphEditor::paint(Graphics &g)
             mouseXY.y - nodeRadius,
             2.0 * nodeRadius,
             2.0 * nodeRadius);
+    }
+    else if (currentMode == GraphEditorMode::AddExternalConnection && connectNodeNode != nullptr)
+    {
+        g.setColour(Colours::green);
+        g.drawLine(connectNodeNode->x, connectNodeNode->y, mouseXY.getX(), mouseXY.getY());
     }
     
     g.setColour(Colours::black);
@@ -218,6 +237,9 @@ void GraphEditor::paint(Graphics &g)
     case GraphEditorMode::ExciteNode:
         stateString = "Excite node";
         break;
+    case GraphEditorMode::AddExternalConnection:
+        stateString = "Connect graphs";
+        break;
     default:
         stateString = "Unknown mode (this should not happen)";
         break;
@@ -241,7 +263,7 @@ void GraphEditor::setMode(GraphEditorMode newMode)
 {
     currentMode = newMode;
     
-    if (currentMode == GraphEditorMode::ConnectNodes)
+    if (currentMode == GraphEditorMode::ConnectNodes || currentMode == GraphEditorMode::AddExternalConnection)
     {
         connectNodeNode = nullptr;
     }
@@ -290,6 +312,7 @@ void GraphEditor::mouseDown(const MouseEvent &event)
 {
     auto mouseXY = getMouseXYRelative();
     auto nodeUnderCursor = getNodeUnderCursor();
+    auto connectionUnderCursor = getConnectionUnderCursor();
 
     if (event.mods.isRightButtonDown())
     {
@@ -300,9 +323,23 @@ void GraphEditor::mouseDown(const MouseEvent &event)
         if (nodeUnderCursor != nullptr)
         {
             selectedNode = nodeUnderCursor;
+            selectedConnection = nullptr;
+            
             if (onNoteSelected)
             {
                 onNoteSelected();
+            }
+            
+            repaint();
+        }
+        else if (connectionUnderCursor != nullptr)
+        {
+            selectedConnection = connectionUnderCursor;
+            selectedNode = nullptr;
+            
+            if (onConnectionSelected)
+            {
+                onConnectionSelected();
             }
             
             repaint();
@@ -340,6 +377,7 @@ void GraphEditor::mouseDown(const MouseEvent &event)
             float dy = (mouseXY.getY() - firstNodeWhenAdding->y) / (float)(numNodesInString - 1);
             
             auto *prevNode = firstNodeWhenAdding;
+            firstNodeWhenAdding->isDirichlet = true;
             nodes->push_back(firstNodeWhenAdding);
             
             for (int i = 1; i < numNodesInString; i++)
@@ -351,6 +389,8 @@ void GraphEditor::mouseDown(const MouseEvent &event)
                 nodes->push_back(node);
                 prevNode = node;
             }
+            
+            prevNode->isDirichlet = true;
             
             firstNodeWhenAdding = nullptr;
         }
@@ -439,6 +479,30 @@ void GraphEditor::mouseDown(const MouseEvent &event)
             }
         }
     }
+    else if (currentMode == GraphEditorMode::AddExternalConnection)
+    {
+        if (nodeUnderCursor != nullptr)
+        {
+            if (connectNodeNode == nullptr)
+            {
+                connectNodeNode = nodeUnderCursor;
+            }
+            else
+            {
+                for (auto *node : *nodes)
+                {
+                    node->value = 0.0;
+                    node->valuePrev = 0.0;
+                    node->dxxPrev = 0.0;
+                }
+                auto c = new Connection(connectNodeNode, nodeUnderCursor);
+                connections->push_back(c);
+                connectNodeNode->connectExternal(c);
+                nodeUnderCursor->connectExternal(c);
+                connectNodeNode = nullptr;
+            }
+        }
+    }
     else if (currentMode == GraphEditorMode::ExciteNode && nodeUnderCursor != nullptr)
     {
         for (auto *node : *nodes)
@@ -495,6 +559,25 @@ Node *GraphEditor::getNodeUnderCursor()
     return nullptr;
 }
 
+Connection *GraphEditor::getConnectionUnderCursor()
+{
+    auto mouseXY = getMouseXYRelative();
+    
+    for (auto *conn : *connections)
+    {
+        float x, y;
+        conn->getCenter(&x, &y);
+        float d = mouseXY.getDistanceFrom(Point<int>(x, y));
+        
+        if (d < nodeRadius)
+        {
+            return conn;
+        }
+    }
+    
+    return nullptr;
+}
+
 void GraphEditor::paintNode(Graphics &g, float x, float y, float radius)
 {
     g.fillEllipse(
@@ -512,16 +595,28 @@ void GraphEditor::goBack()
     {
         connectNodeNode = nullptr;
     }
+    else if (currentMode == GraphEditorMode::AddExternalConnection && connectNodeNode != nullptr)
+    {
+        connectNodeNode = nullptr;
+    }
     else if (currentMode == GraphEditorMode::AddString && firstNodeWhenAdding != nullptr)
     {
         firstNodeWhenAdding = nullptr;
     }
-    else if (currentMode == GraphEditorMode::None && selectedNode != nullptr)
+    
+    if (currentMode == GraphEditorMode::None && selectedConnection != nullptr)
     {
         selectedNode = nullptr;
         onNoteSelected();
     }
-    else
+    
+    if (currentMode == GraphEditorMode::None && selectedNode != nullptr)
+    {
+        selectedNode = nullptr;
+        onNoteSelected();
+    }
+    
+    if (currentMode != GraphEditorMode::None)
     {
         setMode(GraphEditorMode::None);
     }

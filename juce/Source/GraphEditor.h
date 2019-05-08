@@ -14,6 +14,7 @@
 #include <vector>
 #include <functional>
 #include "Node.h"
+#include "Connection.h"
 #include "PluginProcessor.h"
 
 enum GraphEditorMode
@@ -23,6 +24,7 @@ enum GraphEditorMode
     AddString,
     AddGrid,
     ConnectNodes,
+    AddExternalConnection,
     ExciteNode
 };
 
@@ -31,8 +33,9 @@ class GraphEditor : public Component, private Timer
 public:
     std::function<void()> onModeChanged;
     std::function<void()> onNoteSelected;
+    std::function<void()> onConnectionSelected;
 
-    GraphEditor(std::vector<Node*> *nodes, GraphicalAudioProcessor *processor);
+    GraphEditor(std::vector<Node*> *nodes, std::vector<Connection*> *connections, GraphicalAudioProcessor *processor);
     
     GraphEditorMode getMode() { return currentMode; };
     
@@ -41,6 +44,7 @@ public:
     void setAddGridModeNumRows(int value) { addGridNumRows = value; };
     void setAddGridModeNumCols(int value) { addGridNumCols = value; };
     Node *getSelectedNode() { return selectedNode; };
+    Connection *getSelectedConnection() { return selectedConnection; };
 
     virtual void timerCallback() override;
     virtual void paint(Graphics &g) override;
@@ -54,12 +58,15 @@ private:
     void goBack();
 
     Node *getNodeUnderCursor();
+    Connection *getConnectionUnderCursor();
 
     GraphEditorMode currentMode;
     std::vector<Node*> *nodes;
+    std::vector<Connection*> *connections;
     float nodeRadius = 5;
     
     Node *selectedNode = nullptr;
+    Connection *selectedConnection = nullptr;
     
     // The node selected with in connect nodes mode.
     Node *connectNodeNode = nullptr;

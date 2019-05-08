@@ -13,6 +13,7 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include <vector>
 #include "Node.h"
+#include "Connection.h"
 
 //==============================================================================
 /**
@@ -21,6 +22,7 @@ class GraphicalAudioProcessor  : public AudioProcessor
 {
 public:
     std::vector<Node*> nodes;
+    std::vector<Connection*> connections;
 
     //==============================================================================
     GraphicalAudioProcessor();

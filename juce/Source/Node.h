@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Connection.h"
 #include <vector>
 #include <functional>
 
@@ -7,6 +8,7 @@ class Node
 {
 public:
     std::vector<Node*> connections;
+    std::vector<Connection*> externalConnections;
     float x;
     float y;
     float value = 0;
@@ -18,6 +20,7 @@ public:
     bool isNeumann;
 
     void connect(Node *node);
+    void connectExternal(Connection *connection);
     void disconnect(Node *node);
     float sumConnected();
     float computeDxx();
@@ -42,6 +45,7 @@ private:
     float outputLevel = 0.0;
     float inputLevel = 0.0;
     bool midiDisabled = false;
+    
     
     void setWavespeedInner(float value, std::vector<Node*> *visited);
     void visitConnectedInner(std::function<void(Node*)> f, std::vector<Node*> *visited);
