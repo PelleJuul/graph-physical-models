@@ -11,6 +11,11 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
+float sqr(float a)
+{
+    return a * a;
+}
+
 //==============================================================================
 GraphicalAudioProcessor::GraphicalAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -125,6 +130,26 @@ bool GraphicalAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts
 }
 #endif
 
+float GraphicalAudioProcessor::computeIntermediateNodeValue(float rh2, float k, float k2, Node *node)
+{
+    float u = node->value;
+    float u1 = node->valuePrev;
+    float dxx = rh2 * node->computeDxx();
+    float dxx1 = node->dxxPrev;
+    float wavespeed = node->getIgnoreMidi() ? node->getWavespeed() : freq * (node->getWavespeed() / 440.0);
+
+    float y = (1.0 / (1.0 + k * independentDampening)) *
+    (
+        k2 * (wavespeed * wavespeed) * dxx +
+        k * independentDampening * u1 +
+        k * 2.0 * dependentDampening * (dxx - dxx1) +
+        2.0 * u -
+        u1
+    );
+
+    return y;
+}
+
 void GraphicalAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& midiMessages)
 {
     ScopedNoDenormals noDenormals;
@@ -180,37 +205,56 @@ void GraphicalAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuff
     {
         for (auto *c : connections)
         {
-            c->computeForce(k);
+            float u1 = computeIntermediateNodeValue(rh2, k, k2, c->getNodeA());
+            float u2 = computeIntermediateNodeValue(rh2, k, k2, c->getNodeB());
+            float eta = c->getNodeA()->value - c->getNodeB()->value;
+            float lin2 =  c->getLinearCoef() * c->getLinearCoef();
+            float nlin4 = c->getNonLinearCoef() * c->getNonLinearCoef() * c->getNonLinearCoef() * c->getNonLinearCoef();
+            float eta2 = eta * eta;
+            float a = -(lin2 / 2.0) - ((nlin4 * eta2) / 2.0) - (c->getDampening() / k);
+            float p = -2.0 / ((2.0 * c->getDampening()) / k + lin2 + nlin4*eta2);
+            float r = ((2.0 * c->getDampening()) / k - lin2 - nlin4 * eta2) / ((2.0 * c->getDampening()) / k + lin2 + nlin4 * eta2);
+            float K1 = k2 / (1 + k * independentDampening);
+            float K2 = k2 / (1 + k * independentDampening);
+            
+            // -- Ways of computing Fc --
+            
+            // Pelle's first derivation
+            // float fc = ((u1 - u2 - c->etaPrev) * a) / (1 + K1 - K2) * a;
+            
+            // Pelles second derivation using Bilbao's equations
+            // float fc = (r * c->etaPrev - c->etaPrev * a) / (1 + p * a);
+            
+            // The definition from Silvin's paper
+            // float fc = ((r * c->etaPrev) - (h * u1 - h * u2)) / (h * K1 + h * K2 - p);
+            
+            // Simple backwards difference scheme
+            float fc = -lin2 * 0.5 * (eta - c->etaPrev) - nlin4 * eta2 * 0.5 * (eta - c->etaPrev) - 2 * c->getDampening() * (1.0 / k) * (eta - c->etaPrev);
+            
+            // No difference scheme at all (except the backwards difference operator)
+            // float fc = -lin2 * eta - nlin4 * eta2 * eta - 2 * c->getDampening() * (1.0 / k) * (eta - c->etaPrev);
+            
+            fc = fc;
+            printf("%f\n", fc);
+            
+            if (fc != fc)
+            {
+                int a = 42;
+            }
+            
+            c->getNodeA()->force += fc;
+            c->getNodeB()->force += -fc;
+            c->etaPrev = eta;
         }
     
         for (int n = 0; n < nodes.size(); n++)
         {
             auto node = nodes.at(n);
-            float u = node->value;
-            float u1 = node->valuePrev;
-            float dxx = rh2 * node->computeDxx();
-            float dxx1 = node->dxxPrev;
-            float wavespeed = node->getIgnoreMidi() ? node->getWavespeed() : freq * (node->getWavespeed() / 440.0);
             
-            float fc = 0;
-            
-            for (auto c : node->externalConnections)
-            {
-                fc += c->getComputedForce();
-            }
-            
-            float y = (1.0 / (1.0 + k * independentDampening)) *
-            (
-                k2 * (wavespeed * wavespeed) * dxx +
-                k * independentDampening * u1 +
-                k * 2.0 * dependentDampening * (dxx - dxx1) +
-                2.0 * u -
-                u1 +
-                k2 * node->force
-            );
+            float y = computeIntermediateNodeValue(rh2, k, k2, node) + (1.0 / (1.0 + k * independentDampening)) * (k2 * node->force);
             
             node->valueTemp = y;
-            node->dxxPrev = dxx;
+            node->dxxPrev = rh2 * node->computeDxx();;
         }
 
         float y = 0;

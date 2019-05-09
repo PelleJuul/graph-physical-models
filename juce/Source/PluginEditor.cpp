@@ -145,7 +145,7 @@ GraphicalAudioProcessorEditor::GraphicalAudioProcessorEditor (GraphicalAudioProc
     nodeInfo.addAndMakeVisible(nodeOutputLabel);
     
     nodeOutputSlider.setSliderStyle(Slider::SliderStyle::LinearHorizontal);
-    nodeOutputSlider.setRange(0, 100);
+    nodeOutputSlider.setRange(0, 400);
     nodeOutputSlider.setNumDecimalPlacesToDisplay(0);
     nodeOutputSlider.setValue(0);
     nodeOutputSlider.onValueChange = [&]()

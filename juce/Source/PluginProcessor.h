@@ -56,6 +56,7 @@ public:
     void setCurrentProgram (int index) override;
     const String getProgramName (int index) override;
     void changeProgramName (int index, const String& newName) override;
+    float computeIntermediateNodeValue(float rh2, float k, float k2, Node *node);
 
     //==============================================================================
     void getStateInformation (MemoryBlock& destData) override;

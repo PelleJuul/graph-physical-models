@@ -34,11 +34,12 @@ class Connection
     
     void getCenter(float *x, float *y);
     
+    float etaPrev = 0;
     private:
     Node *nodeA;
     Node *nodeB;
     float dnow = 0;
-    float dprev = 0;
+    
     float computedForce = 0;
     float linearCoef;
     float nonLinearCoef;

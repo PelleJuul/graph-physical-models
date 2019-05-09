@@ -16,9 +16,9 @@ Connection::Connection(Node *nodeA, Node *nodeB)
     this->nodeA = nodeA;
     this->nodeB = nodeB;
     
-    linearCoef = 400;
+    linearCoef = 10;
     nonLinearCoef = 1000;
-    dampening = 0;
+    dampening = 1;
 }
 
 void Connection::computeForce(float k)
@@ -29,13 +29,13 @@ void Connection::computeForce(float k)
     float a = (2 * dampening) / k + linearCoef2 + nonLinearCoef4 * etaNow * etaNow;
     float p = -2 / a;
     float r = ((2 * dampening) / k - linearCoef2 - nonLinearCoef4 * etaNow * etaNow) / a;
-    float etaNext = p * computedForce + r * dprev;
+    float etaNext = p * computedForce + r * etaPrev;
 
-    float avg = (etaNext - dprev);
+    float avg = (etaNext - etaPrev);
     computedForce = -linearCoef2 * 0.5 * avg - nonLinearCoef4 * etaNow * etaNow * 0.5 * avg - 2 * dampening * (1.0 / (2.0 * k)) * (avg);
     nodeA->force += computedForce;
     nodeB->force -= computedForce;
-    dprev = etaNow;
+    etaPrev = etaNow;
 }
 
 void Connection::getCenter(float *x, float *y)
