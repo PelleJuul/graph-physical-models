@@ -65,6 +65,11 @@ public:
     float freq = 440;
     float independentDampening = 0.001;
     float dependentDampening = 0.001;
+    float excitationLevel = 0;
+    float currentLevel = 0;
+    float bowMovement = 0.0;
+    float mod = 0.0;
+    int lastKey = 0;
 
 private:
 

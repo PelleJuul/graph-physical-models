@@ -171,6 +171,9 @@ void GraphicalAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuff
     float k2 = k * k;
     float h = 1.0 / 50.0;
     float rh2 = 1.0 / (h * h);
+    float bowVelocity = 0.2;
+    float baseBowForce = 500;
+    float bowCharacteristic = 100;
     
     MidiBuffer::Iterator iterator(midiMessages);
     MidiMessage message;
@@ -183,26 +186,63 @@ void GraphicalAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuff
         if (sampleNumber > lastSamplerNumber)
             break;
         
+        if (message.isController() && message.getControllerNumber() == 1)
+        {
+            printf("Mod set, value=%i\n", message.getControllerValue());
+            mod = message.getControllerValue() / 127.0;
+        }
+        
         if (message.isNoteOn())
         {
             float c = std::pow(2, 1.0 / 12.0);
             int note = message.getNoteNumber();
+            lastKey = note;
             freq = std::pow(c, note - 69) * 440;
+            excitationLevel = (message.getVelocity() / 127.0);
             
             for (auto *node : nodes)
             {
                 if (node->getInputLevel() > 0.01)
                 {
                     float v = (message.getVelocity() / 127.0) * node->getInputLevel();
-                    node->value = v;
-                    node->valuePrev = v;
+                    // node->value = v;
+                    // node->valuePrev = v;
                 }
             }
         }
+        
+        if (message.isNoteOff() && message.getNoteNumber() == lastKey)
+        {
+            excitationLevel = 0;
+        }
     }
+    
+    
     
     for (int i = 0; i < buffer.getNumSamples(); i++)
     {
+    
+        float attackSpeed = 0.0001;
+        currentLevel = (1.0 - attackSpeed) * currentLevel + attackSpeed * excitationLevel;
+        float bowForce = baseBowForce * excitationLevel;
+    
+        float r = (10000 - (rand() % 20000)) / 10000.0;
+        float movementSpeed = 0.00001;
+        bowMovement = (1.0 - movementSpeed) * bowMovement + movementSpeed * r;
+    
+        for (int n = 0; n < nodes.size(); n++)
+        {
+            auto node = nodes.at(n);
+            
+            if (node->getInputLevel() > 0)
+            {
+                float vrel = (1.0 / k) * (node->value - node->valuePrev) - (bowVelocity + 5 * movementSpeed);
+                float theta = sqrt(2 * bowCharacteristic) * vrel * exp(-bowCharacteristic * sqr(vrel) + 0.5);
+                node->force -= node->getInputLevel() * theta * bowForce;
+                // printf("%f\n", node->force);
+            }
+        }
+    
         for (auto *c : connections)
         {
             float u1 = computeIntermediateNodeValue(rh2, k, k2, c->getNodeA());
@@ -264,6 +304,13 @@ void GraphicalAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuff
             auto *node = nodes.at(n);
             node->finishUpdate();
             y += node->getOutputLevel() * node->value;
+        }
+        
+        y = 5000 * y;
+        
+        if (y >= 1.0)
+        {
+            printf("Clipping!\n");
         }
 
         channel0[i] = y;

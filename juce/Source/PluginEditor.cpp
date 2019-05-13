@@ -93,7 +93,7 @@ GraphicalAudioProcessorEditor::GraphicalAudioProcessorEditor (GraphicalAudioProc
     
     brightnessSlider.setRange(0, 100);
     brightnessSlider.setNumDecimalPlacesToDisplay(0);
-    brightnessSlider.setValue(95);
+    brightnessSlider.setValue(90);
     brightnessSlider.onValueChange = [&]()
     {
         processor.dependentDampening = 0.01 * (1.0 - brightnessSlider.getValue() / 100.0);
@@ -105,7 +105,7 @@ GraphicalAudioProcessorEditor::GraphicalAudioProcessorEditor (GraphicalAudioProc
     
     decaySlider.setRange(0, 100);
     decaySlider.setNumDecimalPlacesToDisplay(0);
-    decaySlider.setValue(5);
+    decaySlider.setValue(15);
     decaySlider.onValueChange = [&]()
     {
         processor.independentDampening = 30.0 * (decaySlider.getValue() / 100.0);
@@ -346,6 +346,8 @@ void GraphicalAudioProcessorEditor::paint (Graphics& g)
     g.setColour (Colours::white);
     g.setFont (15.0f);
     g.drawFittedText ("Hello World!", getLocalBounds(), Justification::centred, 1);
+    
+    // printf("%f, %i\n", processor.currentLevel, (int)(10000 * processor.bowMovement));
 }
 
 void GraphicalAudioProcessorEditor::resized()
