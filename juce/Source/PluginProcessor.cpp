@@ -222,27 +222,44 @@ void GraphicalAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuff
     for (int i = 0; i < buffer.getNumSamples(); i++)
     {
     
-        float attackSpeed = 0.0001;
+        float attackSpeed = 0.001;
         currentLevel = (1.0 - attackSpeed) * currentLevel + attackSpeed * excitationLevel;
-        float bowForce = baseBowForce * excitationLevel;
+        float bowForce = baseBowForce * currentLevel;
     
         float r = (10000 - (rand() % 20000)) / 10000.0;
         float movementSpeed = 0.00001;
         bowMovement = (1.0 - movementSpeed) * bowMovement + movementSpeed * r;
-    
+        
+        float valueSum = 0;
+        float valuePrevSum = 0;
+        float totalLevel = 0;
+        
         for (int n = 0; n < nodes.size(); n++)
         {
             auto node = nodes.at(n);
+            float level = node->getInputLevel();
             
-            if (node->getInputLevel() > 0)
+            valueSum += level * node->value;
+            valuePrevSum += level * node->valuePrev;
+            totalLevel += level;
+        }
+        
+        if (totalLevel > 0.0)
+        {
+            valueSum = valueSum / totalLevel;
+            valuePrevSum = valuePrevSum / totalLevel;
+            
+            float vrel = (1.0 / k) * (valueSum - valuePrevSum) - (bowVelocity + 5 * movementSpeed);
+            float theta = sqrt(2 * bowCharacteristic) * vrel * exp(-bowCharacteristic * sqr(vrel) + 0.5);
+            float bowNodeForce = theta * (exp(excitationLevel) * bowForce + 1000 * mod);
+            
+            for (int n = 0; n < nodes.size(); n++)
             {
-                float vrel = (1.0 / k) * (node->value - node->valuePrev) - (bowVelocity + 5 * movementSpeed);
-                float theta = sqrt(2 * bowCharacteristic) * vrel * exp(-bowCharacteristic * sqr(vrel) + 0.5);
-                node->force -= node->getInputLevel() * theta * bowForce;
-                // printf("%f\n", node->force);
+                auto node = nodes.at(n);
+                node->force -= (node->getInputLevel() / totalLevel) * bowNodeForce;
             }
         }
-    
+        
         for (auto *c : connections)
         {
             float u1 = computeIntermediateNodeValue(rh2, k, k2, c->getNodeA());
