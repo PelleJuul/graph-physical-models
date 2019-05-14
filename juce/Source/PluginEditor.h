@@ -44,6 +44,8 @@ private:
     TextButton connectGraphButton;
     TextButton exciteNodeButton;
     TextButton resetButton;
+    TextButton saveButton;
+    TextButton loadButton;
 
     Component toplevelInfo;
     Label brightnessLabel;

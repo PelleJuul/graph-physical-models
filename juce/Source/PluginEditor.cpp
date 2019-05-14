@@ -10,7 +10,10 @@
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "GraphFile.h"
 #include <functional>
+#include <iostream>
+#include <fstream>
 
 //==============================================================================
 GraphicalAudioProcessorEditor::GraphicalAudioProcessorEditor (GraphicalAudioProcessor& p)
@@ -84,6 +87,49 @@ GraphicalAudioProcessorEditor::GraphicalAudioProcessorEditor (GraphicalAudioProc
         }
     };
     addAndMakeVisible(resetButton);
+    
+    saveButton.setButtonText("Save");
+    saveButton.setTooltip("Save model to file");
+    saveButton.onClick = [&]()
+    {
+        std::string text = serialzeNodes(processor.nodes);
+        std::cout << text;
+        
+        FileChooser chooser("Save graph", File::getSpecialLocation(File::userHomeDirectory), "*.graph");
+        
+        if (chooser.browseForFileToSave(true))
+        {
+            std::ofstream os;
+            std::string filename = chooser.getResult().getFullPathName().toStdString();
+            os.open(filename);
+            os << text;
+            os.close();
+        }
+    };
+    addAndMakeVisible(saveButton);
+
+    loadButton.setButtonText("Load");
+    loadButton.setTooltip("Load model from file");
+    loadButton.onClick = [&]()
+    {
+        std::string text = serialzeNodes(processor.nodes);
+        std::cout << text;
+        
+        FileChooser chooser("Load graph", File::getSpecialLocation(File::userHomeDirectory), "*.graph");
+        
+        if (chooser.browseForFileToOpen())
+        {
+            std::ifstream is;
+            std::string filename = chooser.getResult().getFullPathName().toStdString();
+            is.open(filename);
+            std::stringstream ss;
+            ss << is.rdbuf();
+            processor.nodes.clear();
+            deserialzeNodes(ss.str(), &processor.nodes);
+            is.close();
+        }
+    };
+    addAndMakeVisible(loadButton);
     
     
     // SELECT NODE / TOPLEVEL TOOLBOX
@@ -387,6 +433,16 @@ void GraphicalAudioProcessorEditor::resized()
     y += connectGraphButton.getHeight() + margin;
     
     exciteNodeButton.setBounds(x, y, toolBoxWidth, toolBoxItemHeight);
+    y += exciteNodeButton.getHeight() + margin;
+    
+    resetButton.setBounds(x, y, toolBoxWidth, toolBoxItemHeight);
+    y += resetButton.getHeight() + margin;
+    
+    saveButton.setBounds(x, y, toolBoxWidth, toolBoxItemHeight);
+    y += saveButton.getHeight() + margin;
+
+    loadButton.setBounds(x, y, toolBoxWidth, toolBoxItemHeight);
+    y += loadButton.getHeight() + margin;
     
     graphEditor.setBounds(0, 0, getWidth() - infoBoxWidth, getHeight());
     
